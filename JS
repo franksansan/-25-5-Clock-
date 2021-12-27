@@ -1,0 +1,203 @@
+class App extends React.Component {
+  constructor(props) {
+    super(props);
+    this.state = {
+      breakLen: 5,
+      sessionLen: 25,
+      display: 1500,
+      displayType: 'Session',
+      timerState: 'stopped',
+      
+      interval: '',
+    }
+    this.bdecrement = this.bdecrement.bind(this);
+    this.bincrement = this.bincrement.bind(this);
+    this.sdecrement = this.sdecrement.bind(this);
+    this.sincrement = this.sincrement.bind(this);
+    this.reSet = this.reSet.bind(this);
+    this.timer = this.timer.bind(this);
+    this.startTimer = this.startTimer.bind(this);
+    this.intervalControl = this.intervalControl.bind(this);
+    this.change = this.change.bind(this);
+  }
+  startTimer(){
+  if(this.state.display> -1){
+      this.setState({
+        display:(this.state.display - 1),
+      });
+    if(this.state.display === 0) {
+      const music =document.getElementById('beep');
+    music.play();
+    }
+    this.change();
+   } 
+  }
+  change() {
+    let display =this.state.display;
+    if(display === -1) {
+      //清除1秒的间隔
+      clearInterval(this.id);
+      if (this.state.displayType === 'Session') {
+        this.setState({
+          display:this.state.breakLen * 60 +1,
+          displayType:'Break',
+          
+          timerState: 'stopped',
+        });
+        this.intervalControl();
+        this.startTimer();
+      } else { 
+        this.setState({
+          display:this.state.sessionLen * 60 +1,
+          displayType: 'Session',
+          
+          timerState: 'stopped',
+        });
+        this.intervalControl();
+        this.startTimer();
+      }
+    }
+  }
+  intervalControl(){
+    if (this.state.timerState === 'stopped') {  
+      this.id = setInterval(this.startTimer,1000);
+      this.setState({ timerState: 'running'});
+    } else {
+      this.setState({ timerState: 'stopped' });
+      clearInterval(this.id);     
+    }
+    } 
+  timer() {
+    let {display} = this.state;
+    let minutes = Math.floor(display / 60);
+    let seconds = display % 60;
+    return(
+    (minutes < 10 ? '0' + minutes : minutes) + 
+      ':' + 
+      (seconds < 10 ? '0' + seconds : seconds)
+  );
+  }
+  bdecrement() {
+    let value = this.state.breakLen;
+    if(this.state.breakLen  > 1) {
+    this.setState({
+      breakLen: value-1
+    });
+    }
+  }
+  bincrement() {
+    let value = this.state.breakLen;
+    if(59 >= this.state.breakLen) {
+    this.setState({
+      breakLen: value + 1
+    });
+    }
+  }
+  sdecrement() {
+    let {display, sessionLen} = this.state;
+    if(this.state.sessionLen  > 1) {
+    this.setState({
+      sessionLen: (sessionLen-1),
+      display: display - 60
+    });
+    }
+  }
+  sincrement() {
+    let {display, sessionLen} = this.state;
+    if(59 >= this.state.sessionLen) {
+    this.setState({
+      sessionLen: (sessionLen + 1),
+      display: display + 60
+    });
+    }
+  }
+  reSet() {
+    clearInterval(this.id);
+    this.setState({
+      breakLen: 5,
+      sessionLen: 25,
+      display: 1500,
+      displayType: 'Session',
+      timerState: 'stopped',
+      
+      interval: '',
+    });
+    clearInterval(this.id);
+    const music =document.getElementById('beep');
+    music.pause();
+    music.currentTime = 0;
+  }  
+  render() {
+    return(
+    <div id='clock'>
+      <div id='clocktop'>'25 + 5 Clock'</div>
+        <div id='two'>
+        <Break 
+          breakLength={this.state.breakLen} 
+          bdec={this.bdecrement} 
+          binc={this.bincrement}
+          />
+        <Session 
+          sessionLength={this.state.sessionLen}
+          sdec={this.sdecrement}
+          sinc={this.sincrement}
+          />
+        </div>
+        
+               <div>
+        <div id='display'>
+          <div id="timer-label">{this.state.displayType}</div>
+          <div id="time-left">{this.timer()}</div>
+        </div>
+        
+        <div id='down'>
+          <div id="start_stop" onClick={this.intervalControl}>
+            <i className='fa fa-play'/>
+            <i className='fa fa-pause'/></div>
+          <div id="reset" onClick={this.reSet}><i className="fa fa-refresh"/></div>
+        </div>
+              </div>
+    <div
+      id='bee'
+      >
+        <audio 
+          id='beep'
+          src='https://interactive-examples.mdn.mozilla.net/media/cc0-audio/t-rex-roar.mp3'
+          
+          />
+        </div>              
+    </div>
+    );
+  }
+}
+class Session extends React.Component {
+  render() {
+    return(
+      <div className='twoblock'>
+        <div id="session-label">Session Length</div>
+        <div className='three'>
+        <div id="session-decrement" onClick={this.props.sdec}><i className='fa fa-arrow-down' /></div>
+        <div id="session-length">{this.props.sessionLength}</div>
+        <div id="session-increment" onClick={this.props.sinc}><i className='fa fa-arrow-up' /></div>
+        </div>
+      </div>
+    );
+  }
+}
+class Break extends React.Component {
+  render() {
+    return(
+      <div className='twoblock'>
+        <div id="break-label">Break Length</div>
+        <div className='three'>
+        <div id="break-decrement" onClick={this.props.bdec}><i className='fa fa-arrow-down' /></div>
+        <div id="break-length">{this.props.breakLength}</div>
+        <div id="break-increment" onClick={this.props.binc}><i className='fa fa-arrow-up' /></div>
+        </div>
+      </div>
+    );
+  }
+}
+
+
+ReactDOM.render(<App />,document.getElementById('app'));
